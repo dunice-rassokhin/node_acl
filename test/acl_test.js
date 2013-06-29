@@ -11,7 +11,7 @@ function testBackend(type, options, cb){
       var memoryBackend = require('../lib/memory-backend');
       startTests(new memoryBackend(), cb);
       break;
-    
+
     case "redis":
       var redisBackend = require('../lib/redis-backend');
       var client = require('redis').createClient(
@@ -22,15 +22,24 @@ function testBackend(type, options, cb){
       if (options.password) client.auth(options.password, start);
       else start();
       break;
-      
+
     case "mongodb":
-      var mongodb = require('mongodb'); 
+      var mongodb = require('mongodb');
       var mongoDBBackend = require('../lib/mongodb-backend');
       mongodb.connect(options,function(error, db) {
         startTests(new mongoDBBackend(db, "acl"), cb);
-      });   
+      });
       break;
-      
+
+    case "mongoose":
+      var mongoose = require('mongoose');
+      var mongooseBackend = require('../lib/mongoose-backend');
+      mongoose.connect(options);
+      mongoose.connection.once('open',function () {
+        startTests(new mongooseBackend(mongoose, "acl"), cb);
+      });
+      break;
+
     default: throw new Error(type + " is not a valid backend");
   };
 }
@@ -40,7 +49,7 @@ exports.testBackend = testBackend;
 
 // start test suite
 function startTests (backend, cb){
-  
+
 acl = new Acl(backend);
 
 var suite = vows.describe('Access Control Lists');
@@ -136,7 +145,7 @@ suite.addBatch({
   },
   'Give role fumanchu an array of resources and permissions':{
     topic: function(){
-      acl.allow([{roles:'fumanchu', 
+      acl.allow([{roles:'fumanchu',
                   allows:[
                           {resources:'blogs', permissions:'get'},
                           {resources:['forums','news'], permissions:['get','put','delete']}
@@ -227,11 +236,11 @@ suite.addBatch({
       assert.isNull(err)
       assert.include(permissions, 'blogs')
       assert.include(permissions, 'forums')
-      
+
       assert.include(permissions.blogs, 'edit')
       assert.include(permissions.blogs, 'delete')
       assert.include(permissions.blogs, 'view')
-      
+
       assert.isEmpty(permissions.forums)
     }
   },
@@ -242,7 +251,7 @@ suite.addBatch({
       assert.isTrue(allow)
     }
   },
-  
+
   'Can harry delete,add, and view blogs and forums?':{
     topic: function(){acl.isAllowed('harry', 'forums', ['add','delete','view'], this.callback)},
     'allowed':function(err, allow){
@@ -564,4 +573,3 @@ suite.run({reporter:require('vows/lib/vows/reporters/spec')}, function(results){
 })
 
 }
-

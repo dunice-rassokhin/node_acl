@@ -8,7 +8,7 @@ var tests = [
     console.log("Testing memory backend");
     testBackend("memory", {}, cb);
   },
-  
+
   /* Redis */
   function(cb) {
     console.log("Testing Redis backend");
@@ -19,12 +19,19 @@ var tests = [
     };
     testBackend("redis", options, cb);
   },
-  
+
   /* MongoDB */
   function(cb) {
     console.log("Testing MongoDB backend");
     var url = "mongodb://127.0.0.1:27017/acltest";
     testBackend("mongodb", url, cb);
+  },
+
+  /* Mongoose ODM */
+  function(cb) {
+    console.log("Testing Mongoose backend");
+    var url = "mongodb://127.0.0.1:27017/aclMongooseTest";
+    testBackend("mongoose", url, cb);
   }
 
 ];
